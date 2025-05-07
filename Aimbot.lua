@@ -103,7 +103,7 @@ getgenv().ExunysDeveloperAimbot = {
 		OffsetToMoveDirection = false,
 		OffsetIncrement = 15,
 
-		Sensitivity = 0, -- Animation length (in seconds) before fully locking onto target
+		Sensitivity = 1, -- Animation length (in seconds) before fully locking onto target
 		Sensitivity2 = 3.5, -- mousemoverel Sensitivity
 
 		LockMode = 1, -- 1 = CFrame; 2 = mousemoverel
@@ -185,7 +185,7 @@ local GetClosestPlayer = function()
 	local LockPart = Settings.LockPart
 
 	if not Environment.Locked then
-		RequiredDistance = Environment.FOVSettings.Enabled and Environment.FOVSettings.Radius or 3571
+		RequiredDistance = Environment.FOVSettings.Enabled and Environment.FOVSettings.Radius or 2000
 
 		for _, Value in next, GetPlayers(Players) do
 			local Character = __index(Value, "Character")
@@ -216,7 +216,7 @@ local GetClosestPlayer = function()
 
 				local Vector, OnScreen, Distance = WorldToViewportPoint(Camera, PartPosition)
 				Vector = ConvertVector(Vector)
-				Distance = (Camera.CFrame.Position - PartPosition).Magnitude
+				Distance = (GetMouseLocation(UserInputService) - Vector).Magnitude
 
 				if Distance < RequiredDistance and OnScreen then
 					RequiredDistance, Environment.Locked = Distance, Value
@@ -240,6 +240,7 @@ local Load = function()
 	]]
 
 	ServiceConnections.RenderSteppedConnection = Connect(__index(RunService, Environment.DeveloperSettings.UpdateMode), function()
+	    PF_DrawESP()
 		local OffsetToMoveDirection, LockPart = Settings.OffsetToMoveDirection, Settings.LockPart
 
 		if FOVSettings.Enabled and Settings.Enabled then
@@ -337,6 +338,59 @@ ServiceConnections.TypingEndedConnection = Connect(__index(UserInputService, "Te
 end)
 
 --// Functions
+-- Phantom Forces ESP
+local PF_ESPDrawings = {}
+
+local function PF_ClearESP()
+    for _, drawingGroup in pairs(PF_ESPDrawings) do
+        for _, drawing in pairs(drawingGroup) do
+            if drawing then drawing:Remove() end
+        end
+    end
+    PF_ESPDrawings = {}
+end
+
+local function PF_DrawESP()
+    PF_ClearESP()
+    for _, player in pairs(GetPlayers(Players)) do
+        if player ~= LocalPlayer then
+            local character = __index(player, "Character")
+            local torso = character and FindFirstChild(character, "Torso") or FindFirstChild(character, "HumanoidRootPart")
+            local head = character and FindFirstChild(character, "Head")
+            local humanoid = character and FindFirstChildOfClass(character, "Humanoid")
+
+            if character and torso and head and humanoid and __index(humanoid, "Health") > 0 then
+                local pos, onScreen = WorldToViewportPoint(Camera, __index(torso, "Position"))
+                if onScreen then
+                    -- Box
+                    local box = Drawingnew("Square")
+                    box.Position = Vector2new(pos.X - 25, pos.Y - 50)
+                    box.Size = Vector2new(50, 100)
+                    box.Color = Color3fromRGB(255, 255, 0)
+                    box.Thickness = 1
+                    box.Transparency = 1
+                    box.Filled = false
+                    box.Visible = true
+
+                    -- Name Tag
+                    local nameTag = Drawingnew("Text")
+                    nameTag.Text = __index(player, "Name")
+                    nameTag.Position = Vector2new(pos.X - (#nameTag.Text * 3), pos.Y - 60)
+                    nameTag.Color = Color3fromRGB(255, 255, 0)
+                    nameTag.Size = 13
+                    nameTag.Center = false
+                    nameTag.Outline = true
+                    nameTag.Visible = true
+
+                    PF_ESPDrawings[player] = {
+                        Box = box,
+                        Name = nameTag
+                    }
+                end
+            end
+        end
+    end
+end
 
 function Environment.Exit(self) -- METHOD | ExunysDeveloperAimbot:Exit(<void>)
 	assert(self, "EXUNYS_AIMBOT-V3.Exit: Missing parameter #1 \"self\" <table>.")
