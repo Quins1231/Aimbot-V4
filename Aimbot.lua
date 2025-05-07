@@ -113,34 +113,10 @@ getgenv().ExunysDeveloperAimbot = {
 		Toggle = false
 	},
 
-	FOVSettings = {
-		Enabled = false,
-		Visible = true,
-
-		Radius = 90,
-		NumSides = 60,
-
-		Thickness = 1,
-		Transparency = 1,
-		Filled = false,
-
-		RainbowColor = false,
-		RainbowOutlineColor = false,
-		Color = Color3fromRGB(255, 255, 255),
-		OutlineColor = Color3fromRGB(0, 0, 0),
-		LockedColor = Color3fromRGB(255, 150, 150)
-	},
-
 	Blacklisted = {},
-	FOVCircleOutline = Drawingnew("Circle"),
-	FOVCircle = Drawingnew("Circle")
 }
 
 local Environment = getgenv().ExunysDeveloperAimbot
-
-setrenderproperty(Environment.FOVCircle, "Visible", false)
-setrenderproperty(Environment.FOVCircleOutline, "Visible", false)
-
 --// Core Functions
 
 local FixUsername = function(String)
@@ -170,10 +146,7 @@ end
 local CancelLock = function()
 	Environment.Locked = nil
 
-	local FOVCircle = Environment.FOVCircle--Degrade and Environment.FOVCircle or Environment.FOVCircle.__OBJECT
-
-	setrenderproperty(FOVCircle, "Color", Environment.FOVSettings.Color)
-	__newindex(UserInputService, "MouseDeltaSensitivity", OriginalSensitivity)
+	local FOVCircle = Environment.FOVCircle--Degrade and Environment.FOVCircle or Environment.FOVCircle.__OBJECT	__newindex(UserInputService, "MouseDeltaSensitivity", OriginalSensitivity)
 
 	if Animation then
 		Animation:Cancel()
@@ -216,7 +189,7 @@ local GetClosestPlayer = function()
 
 				local Vector, OnScreen, Distance = WorldToViewportPoint(Camera, PartPosition)
 				Vector = ConvertVector(Vector)
-				Distance = (GetMouseLocation(UserInputService) - Vector).Magnitude
+				Distance = (Camera.CFrame.Position - PartPosition).Magnitude
 
 				if Distance < RequiredDistance and OnScreen then
 					RequiredDistance, Environment.Locked = Distance, Value
@@ -229,9 +202,7 @@ local GetClosestPlayer = function()
 end
 
 local Load = function()
-	OriginalSensitivity = __index(UserInputService, "MouseDeltaSensitivity")
-
-	local Settings, FOVCircle, FOVCircleOutline, FOVSettings, Offset = Environment.Settings, Environment.FOVCircle, Environment.FOVCircleOutline, Environment.FOVSettings
+	OriginalSensitivity = __index(UserInputService, "MouseDeltaSensitivity")local Settings, Offset = Environment.Settings, nil
 
 	--[[
 	if not Degrade then
@@ -239,31 +210,46 @@ local Load = function()
 	end
 	]]
 
-	ServiceConnections.RenderSteppedConnection = Connect(__index(RunService, Environment.DeveloperSettings.UpdateMode), function()
+	
+local ESPDrawings = {}
+
+local function ClearESP()
+    for _, drawing in pairs(ESPDrawings) do
+        if drawing then
+            drawing:Remove()
+        end
+    end
+    ESPDrawings = {}
+end
+
+local function DrawESP()
+    ClearESP()
+    for _, player in pairs(GetPlayers(Players)) do
+        if player ~= LocalPlayer and not table.find(Environment.Blacklisted, __index(player, "Name")) then
+            local character = __index(player, "Character")
+            local humanoidRootPart = character and FindFirstChild(character, "HumanoidRootPart")
+
+            if character and humanoidRootPart then
+                local position, onScreen = WorldToViewportPoint(Camera, __index(humanoidRootPart, "Position"))
+                if onScreen then
+                    local box = Drawingnew("Square")
+                    box.Position = Vector2new(position.X - 25, position.Y - 50)
+                    box.Size = Vector2new(50, 100)
+                    box.Color = Color3fromRGB(255, 0, 0)
+                    box.Thickness = 1
+                    box.Transparency = 1
+                    box.Filled = false
+                    box.Visible = true
+                    table.insert(ESPDrawings, box)
+                end
+            end
+        end
+    end
+end
+
+ServiceConnections.RenderSteppedConnection = Connect(__index(RunService, Environment.DeveloperSettings.UpdateMode), function()
+        DrawESP()
 		local OffsetToMoveDirection, LockPart = Settings.OffsetToMoveDirection, Settings.LockPart
-
-		if FOVSettings.Enabled and Settings.Enabled then
-			for Index, Value in next, FOVSettings do
-				if Index == "Color" then
-					continue
-				end
-
-				if pcall(getrenderproperty, FOVCircle, Index) then
-					setrenderproperty(FOVCircle, Index, Value)
-					setrenderproperty(FOVCircleOutline, Index, Value)
-				end
-			end
-
-			setrenderproperty(FOVCircle, "Color", (Environment.Locked and FOVSettings.LockedColor) or FOVSettings.RainbowColor and GetRainbowColor() or FOVSettings.Color)
-			setrenderproperty(FOVCircleOutline, "Color", FOVSettings.RainbowOutlineColor and GetRainbowColor() or FOVSettings.OutlineColor)
-
-			setrenderproperty(FOVCircleOutline, "Thickness", FOVSettings.Thickness + 1)
-			setrenderproperty(FOVCircle, "Position", GetMouseLocation(UserInputService))
-			setrenderproperty(FOVCircleOutline, "Position", GetMouseLocation(UserInputService))
-		else
-			setrenderproperty(FOVCircle, "Visible", false)
-			setrenderproperty(FOVCircleOutline, "Visible", false)
-		end
 
 		if Running and Settings.Enabled then
 			GetClosestPlayer()
@@ -285,10 +271,7 @@ local Load = function()
 					end
 
 					__newindex(UserInputService, "MouseDeltaSensitivity", 0)
-				end
-
-				setrenderproperty(FOVCircle, "Color", FOVSettings.LockedColor)
-			end
+				end			end
 		end
 	end)
 
@@ -345,11 +328,7 @@ function Environment.Exit(self) -- METHOD | ExunysDeveloperAimbot:Exit(<void>)
 		Disconnect(ServiceConnections[Index])
 	end
 
-	Load = nil; ConvertVector = nil; CancelLock = nil; GetClosestPlayer = nil; GetRainbowColor = nil; FixUsername = nil
-
-	self.FOVCircle:Remove()
-	self.FOVCircleOutline:Remove()
-	getgenv().ExunysDeveloperAimbot = nil
+	Load = nil; ConvertVector = nil; CancelLock = nil; GetClosestPlayer = nil; GetRainbowColor = nil; FixUsername = nil	getgenv().ExunysDeveloperAimbot = nil
 end
 
 function Environment.Restart() -- ExunysDeveloperAimbot.Restart(<void>)
