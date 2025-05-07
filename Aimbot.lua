@@ -211,12 +211,13 @@ local Load = function()
 	]]
 
 	
+
 local ESPDrawings = {}
 
 local function ClearESP()
-    for _, drawing in pairs(ESPDrawings) do
-        if drawing then
-            drawing:Remove()
+    for _, drawingGroup in pairs(ESPDrawings) do
+        for _, drawing in pairs(drawingGroup) do
+            if drawing then drawing:Remove() end
         end
     end
     ESPDrawings = {}
@@ -228,20 +229,56 @@ local function DrawESP()
         if player ~= LocalPlayer and not table.find(Environment.Blacklisted, __index(player, "Name")) then
             local character = __index(player, "Character")
             local humanoidRootPart = character and FindFirstChild(character, "HumanoidRootPart")
+            local head = character and FindFirstChild(character, "Head")
+            local humanoid = character and FindFirstChildOfClass(character, "Humanoid")
 
-            if character and humanoidRootPart then
-                local position, onScreen = WorldToViewportPoint(Camera, __index(humanoidRootPart, "Position"))
+            if character and humanoidRootPart and head and humanoid and __index(humanoid, "Health") > 0 then
+                local pos, onScreen = WorldToViewportPoint(Camera, __index(humanoidRootPart, "Position"))
                 if onScreen then
+                    local color = __index(player, "TeamColor") and __index(player, "TeamColor").Color or Color3fromRGB(255, 0, 0)
+
+                    -- Box
                     local box = Drawingnew("Square")
-                    box.Position = Vector2new(position.X - 25, position.Y - 50)
+                    box.Position = Vector2new(pos.X - 25, pos.Y - 50)
                     box.Size = Vector2new(50, 100)
-                    box.Color = Color3fromRGB(255, 0, 0)
+                    box.Color = color
                     box.Thickness = 1
                     box.Transparency = 1
                     box.Filled = false
                     box.Visible = true
-                    table.insert(ESPDrawings, box)
+
+                    -- Name
+                    local nameTag = Drawingnew("Text")
+                    nameTag.Text = __index(player, "Name")
+                    nameTag.Position = Vector2new(pos.X - (#nameTag.Text * 3), pos.Y - 60)
+                    nameTag.Color = color
+                    nameTag.Size = 13
+                    nameTag.Center = false
+                    nameTag.Outline = true
+                    nameTag.Visible = true
+
+                    -- Health bar
+                    local hpPercent = math.clamp(__index(humanoid, "Health") / __index(humanoid, "MaxHealth"), 0, 1)
+                    local barHeight = 100 * hpPercent
+                    local healthBar = Drawingnew("Line")
+                    healthBar.From = Vector2new(pos.X - 27, pos.Y + 50)
+                    healthBar.To = Vector2new(pos.X - 27, pos.Y + 50 - barHeight)
+                    healthBar.Color = Color3fromRGB(0, 255, 0)
+                    healthBar.Thickness = 2
+                    healthBar.Transparency = 1
+                    healthBar.Visible = true
+
+                    ESPDrawings[player] = {
+                        Box = box,
+                        Name = nameTag,
+                        HealthBar = healthBar
+                    }
                 end
+            end
+        end
+    end
+end
+
             end
         end
     end
