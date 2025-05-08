@@ -1,4 +1,4 @@
---[[
+
 
 	Universal Aimbot Module by Exunys © CC0 1.0 Universal (2023 - 2024)
 	https://github.com/Exunys
@@ -111,8 +111,6 @@ getgenv().ExunysDeveloperAimbot = {
 
 		TriggerKey = Enum.UserInputType.MouseButton2,
 		Toggle = false
-
-		 MaxDistance = 1000 -- 1 kilometer (in studs)
 	},
 
 	FOVSettings = {
@@ -195,18 +193,16 @@ local GetClosestPlayer = function()
 
 			if Value ~= LocalPlayer and not tablefind(Environment.Blacklisted, __index(Value, "Name")) and Character and FindFirstChild(Character, LockPart) and Humanoid then
 				local PartPosition, TeamCheckOption = __index(Character[LockPart], "Position"), Environment.DeveloperSettings.TeamCheckOption
-				-- 3D world distance check
-				if (PartPosition - Camera.CFrame.Position).Magnitude > Settings.MaxDistance then
-					continue
-				end
 
 				if Settings.TeamCheck and __index(Value, TeamCheckOption) == __index(LocalPlayer, TeamCheckOption) then
 					continue
 				end
 
-				if Settings.AliveCheck and __index(Humanoid, "Health") <= 0 then
-					continue
-				end
+				local myTeam = LocalPlayer.Team and tostring(LocalPlayer.Team)
+local theirTeam = Value.Team and tostring(Value.Team)
+if Settings.TeamCheck and myTeam == theirTeam then
+    continue
+end
 
 				if Settings.WallCheck then
 					local BlacklistTable = GetDescendants(__index(LocalPlayer, "Character"))
