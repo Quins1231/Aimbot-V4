@@ -111,6 +111,8 @@ getgenv().ExunysDeveloperAimbot = {
 
 		TriggerKey = Enum.UserInputType.MouseButton2,
 		Toggle = false
+
+		 MaxDistance = 1000 -- 1 kilometer (in studs)
 	},
 
 	FOVSettings = {
@@ -193,6 +195,10 @@ local GetClosestPlayer = function()
 
 			if Value ~= LocalPlayer and not tablefind(Environment.Blacklisted, __index(Value, "Name")) and Character and FindFirstChild(Character, LockPart) and Humanoid then
 				local PartPosition, TeamCheckOption = __index(Character[LockPart], "Position"), Environment.DeveloperSettings.TeamCheckOption
+				-- 3D world distance check
+				if (PartPosition - Camera.CFrame.Position).Magnitude > Settings.MaxDistance then
+					continue
+				end
 
 				if Settings.TeamCheck and __index(Value, TeamCheckOption) == __index(LocalPlayer, TeamCheckOption) then
 					continue
