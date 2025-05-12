@@ -1,4 +1,4 @@
-
+--[[
 
 	Universal Aimbot Module by Exunys © CC0 1.0 Universal (2023 - 2024)
 	https://github.com/Exunys
@@ -198,11 +198,9 @@ local GetClosestPlayer = function()
 					continue
 				end
 
-				local myTeam = LocalPlayer.Team and tostring(LocalPlayer.Team)
-local theirTeam = Value.Team and tostring(Value.Team)
-if Settings.TeamCheck and myTeam == theirTeam then
-    continue
-end
+				if Settings.AliveCheck and __index(Humanoid, "Health") <= 0 then
+					continue
+				end
 
 				if Settings.WallCheck then
 					local BlacklistTable = GetDescendants(__index(LocalPlayer, "Character"))
