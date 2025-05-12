@@ -185,7 +185,7 @@ local GetClosestPlayer = function()
 	local LockPart = Settings.LockPart
 
 	if not Environment.Locked then
-		RequiredDistance = Environment.FOVSettings.Enabled and Environment.FOVSettings.Radius or 1000
+		RequiredDistance = Environment.FOVSettings.Enabled and Environment.FOVSettings.Radius or 2000
 
 		for _, Value in next, GetPlayers(Players) do
 			local Character = __index(Value, "Character")
